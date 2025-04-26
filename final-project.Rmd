@@ -1,0 +1,87 @@
+---
+title: "Data Science Final Project"
+author: "Ariel Chen and Allyson Hur"
+date: "2025-04-26"
+output: html_document
+---
+
+```{r setup}
+library(tidyverse)
+library(rsample)
+library(dplyr)
+```
+
+```{r}
+df <- read_csv("./data/monincentive.csv") %>% 
+  glimpse() 
+```
+
+```{r}
+df %>% summary()
+```
+
+```{r}
+df_clean <- df %>%
+  rename(
+    Stroop_before = `Stroop Interference (ms)-before`,
+    Stroop_after = `Stroop Interference (ms)-after`,
+    Time_diff = `Time Difference`,
+    Wealth = `Current Wealth`,
+  )
+```
+
+```{r}
+df_clean %>% 
+  ggplot(aes(x = Age, y = Stroop_before)) +
+  geom_point() +
+  theme_minimal() +
+  labs(title = "Stroop Interference Results - Before vs. Age",
+       x = "Stroop Test Results (ms)", y = "Age (years)")
+```
+
+```{r}
+df_clean %>% 
+  ggplot(aes(x = Age, y = Stroop_after)) +
+  geom_point() +
+  theme_minimal() +
+  labs(title = "=Stroop Interference Results - After vs. Age",
+       x = "Stroop Test Results (ms)", y = "Age (years)")
+```
+
+```{r}
+
+df_no_outliers = df_clean[-c(2, 38), ]
+df_no_outliers %>% 
+  ggplot(aes(x = Wealth, y = Time_diff, colour = Age)) +
+  geom_point() +
+  labs(title = "Wealth vs. Time Difference",
+       x = "Wealth (Island $)", y = "Time Difference (ms)")
+```
+
+```{r}
+
+df_no_outliers %>% 
+  ggplot(aes(x = Age,  y = Time_diff, colour = Wealth)) +
+  geom_point() +
+  labs(title = "Age vs. Time Difference",
+       x = "Age (years)", y = "Time Difference (ms)")
+
+```
+
+```{r}
+
+df_long <- df_no_outliers %>%
+  pivot_longer(
+    cols = c(Stroop_before, Stroop_after),
+    names_to = "Time",
+    values_to = "Stroop_Interference"
+  )
+
+df_long %>%
+  ggplot(aes(x = Wealth, y = Stroop_Interference, fill = Time)) +
+  geom_boxplot() +
+  facet_wrap(~ Time) +
+  theme_minimal() +
+  labs(title = "Wealth vs.Stroop Interference Test Results",
+       x = "Wealth (Island $)", y = "Stroop Interference Results (ms)")
+```
