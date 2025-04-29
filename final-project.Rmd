@@ -1,0 +1,264 @@
+---
+title: "Data Science Final Project"
+author: "Ariel Chen and Allyson Hur"
+date: "2025-04-26"
+output:
+  github_document:
+    toc: true
+---
+
+```{r setup}
+library(tidyverse)
+library(rsample)
+library(dplyr)
+```
+
+```{r}
+df <- read_csv("./data/monincentive.csv") %>% 
+  glimpse() 
+```
+
+```{r}
+df %>% summary()
+```
+
+```{r}
+df_clean <- df %>%
+  rename(
+    Stroop_before = `Stroop Interference (ms)-before`,
+    Stroop_after = `Stroop Interference (ms)-after`,
+    Time_diff = `Time Difference`,
+    Wealth = `Current Wealth`,
+  )
+```
+
+```{r}
+df_clean %>% 
+  ggplot(aes(x = Age, y = Stroop_before)) +
+  geom_point(color = "darkblue") +
+  theme_minimal() +
+  labs(title = "Stroop Interference Results - Before vs. Age",
+       x = "Age (years)", y = "Stroop Test Results (ms)") +
+  theme( 
+    plot.title = element_text(size = 14, face = "bold", hjust = 0.5),
+    )+
+  theme(
+    plot.margin = margin(10, 10, 10, 10)  # Margins around the plot
+  )
+```
+
+```{r}
+df_clean %>% 
+  ggplot(aes(x = Age, y = Stroop_after)) +
+  geom_point(color = "darkblue") +
+  theme_minimal() +
+  labs(title = "Stroop Interference Results - After vs. Age",
+       x = "Age (years)", y = "Stroop Test Results (ms)") +
+  theme( 
+    plot.title = element_text(size = 14, face = "bold", hjust = 0.5),
+    )+
+  theme(
+    plot.margin = margin(10, 10, 10, 10)  # Margins around the plot
+  )
+```
+
+```{r}
+df_clean %>% 
+  ggplot(aes(x = Age, y = Time_diff)) +
+  geom_point() +
+  theme_minimal() +
+  labs(title = "Time Difference vs. Age",
+       x = "Age (years)", y = "Time Difference (ms)") +
+  theme( 
+    plot.title = element_text(size = 14, face = "bold", hjust = 0.5),
+    )+
+  theme(
+    plot.margin = margin(10, 10, 10, 10)  # Margins around the plot
+  )
+```
+
+```{r}
+
+df_no_outliers = df_clean[-c(2, 38), ]
+df_no_outliers %>% 
+  ggplot(aes(x = Wealth, y = Time_diff, colour = Age)) +
+  geom_point() +
+  labs(title = "Wealth vs. Time Difference",
+       x = "Wealth (Island $)", y = "Time Difference (ms)") +
+  theme_minimal() +
+  theme( 
+    plot.title = element_text(size = 14, face = "bold", hjust = 0.5),
+    )+
+  theme(
+    plot.margin = margin(10, 10, 10, 10)  # Margins around the plot
+  )
+```
+
+```{r}
+quantiles <- quantile(df_clean$Wealth, probs = c(0.25, 0.5, 0.75))
+
+df_long <- df_clean %>%
+  pivot_longer(
+    cols = c(Stroop_before, Stroop_after),
+    names_to = "Time",
+    values_to = "Stroop_Interference"
+  ) %>% 
+  mutate(
+    Wealth_group = case_when(
+      Wealth >= quantiles[3] ~ "Rich",            # Greater than 75th percentile
+      Wealth >= quantiles[2] & Wealth < quantiles[3] ~ "Upper-Middle",  # Between 50th and 75th percentile
+      Wealth >= quantiles[1] & Wealth < quantiles[2] ~ "Lower-Middle",  # Between 25th and 50th percentile
+      Wealth < quantiles[1] ~ "Poor"              # Less than 25th percentile
+    ),
+    Wealth_group = factor(
+      Wealth_group,
+      levels = c("Poor", "Lower-Middle", "Upper-Middle", "Rich")
+    )
+  )
+
+df_long %>%
+  ggplot(aes(x = Wealth_group, y = Stroop_Interference, fill = Time)) +
+  geom_boxplot(
+    color = "black",  # Box color for better contrast
+    outlier.shape = 16,  # Style outliers with circles
+    outlier.size = 3,  # Adjust outlier size
+    outlier.colour = "red"  # Color outliers in red
+  ) +
+  facet_wrap(~ Time) +  # Facet based on Time (before vs after)
+  scale_fill_manual(values = c("Stroop_before" = "#FF9999", "Stroop_after" = "#66B3FF")) +  # Custom colors for before and after
+  theme_minimal() +  # Minimal theme with larger text
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),  # Rotate x-axis labels for readability
+    plot.title = element_text(size = 14, face = "bold", hjust = 0.5),  # Title styling
+    strip.text = element_text(size = 11, face = "bold"),  # Facet label styling
+    legend.position = "none",  # Hide legend (redundant with x-axis labels)
+    plot.margin = margin(10, 10, 10, 10)  # Add margins around the plot
+  ) +
+  labs(
+    title = "Wealth Group vs Stroop Interference Test Results",
+    x = "Wealth Group",
+    y = "Stroop Interference Results (ms)"
+  )
+```
+
+```{r}
+
+df_bootstrap_sim <- 
+  df_clean %>% 
+  bootstraps(., times = 1000) %>% 
+  mutate(
+    time_est = map_dbl(
+      splits,
+      function(split_df) {
+        analysis(split_df) %>% 
+          # Estimate pi (pi_est) using the resampled data;
+          # this should be *identical* to the
+          # code you wrote for q3
+            # mutate(time_est = mean(Time_diff)) %>%
+            summarize(time_est = mean(Time_diff)) %>%
+          pull(time_est)
+      }
+    )
+  )
+
+## NOTE: Do not edit; use this to visualize your results
+df_bootstrap_sim %>% 
+  ggplot(aes(time_est)) +
+  geom_histogram()
+```
+
+```{r}
+df_bootstrap <- df_bootstrap_sim %>% 
+  summarize(
+    mean_time = mean(time_est),
+    time_lo = quantile(time_est, 0.05 / 2),
+    time_up = quantile(time_est, (1 - 0.05) / 2),
+  )
+
+df_bootstrap
+
+```
+
+```{r}
+df_clt_ci <- df_clean %>%
+  summarize(
+    mean_time = mean(Time_diff),          # Mean of the sample
+    sd_time = sd(Time_diff),               # Standard deviation of the sample
+  ) %>%
+  mutate(
+    se = sd_time / sqrt(1000),                          # Standard error
+    time_lo = mean_time - qnorm(0.975) * se,          # 95% CI lower bound
+    time_up = mean_time + qnorm(0.975) * se           # 95% CI upper bound
+  )
+
+df_clt_ci
+```
+
+```{r}
+df_bootstrap_sim %>%
+  ggplot(aes(x = time_est)) +
+  geom_histogram(bins = 30, fill = "skyblue", color = "black") +
+  geom_vline(data = df_bootstrap, aes(xintercept = time_lo), color = "red", linetype = "dashed", size = 1) +
+  geom_vline(data = df_bootstrap, aes(xintercept = time_up), color = "red", linetype = "dashed", size = 1) +
+  geom_vline(data = df_clt_ci, aes(xintercept = time_lo), color = "darkgreen", linetype = "dotted", size = 1) +
+  geom_vline(data = df_clt_ci, aes(xintercept = time_up), color = "darkgreen", linetype = "dotted", size = 1) +
+  labs(title = "Bootstrap vs CLT Confidence Intervals",
+       subtitle = "Bootstrap CI (red dashed), CLT CI (green dotted)",
+       x = "Time estimate",
+       y = "Frequency")
+
+```
+
+```         
+```
+
+```{r}
+df_no_outliers %>% 
+  ggplot(aes(x=Age, y=Wealth)) +
+  geom_point() +
+  theme_minimal()
+```
+
+```{r}
+df_long %>%
+  ggplot(aes(x = Wealth_group, y = Age)) +
+  geom_boxplot(
+    color = "black",  # Box color
+    outlier.shape = 16,  # Style outliers
+    outlier.size = 1.5,  # Outlier size
+    outlier.colour = "red"  # Outlier color
+  ) +
+  theme_minimal() +  # Minimal theme with larger text size
+  labs(
+    title = "Distribution of Time Difference by Age",
+    x = "Age", 
+    y = "Time Difference (ms)"
+  ) +
+  theme(
+    plot.title = element_text(size = 14, face = "bold", hjust = 0.5),  # Title styling
+    panel.grid.minor = element_blank(),  # Remove minor gridlines
+    legend.position = "none"  # Hide legend (since it's redundant with the x-axis labels)
+  ) 
+```
+
+```{r}
+df_long %>% 
+  ggplot(aes(x = Wealth_group, y = Time_diff)) +
+  geom_boxplot(,  # Add color based on wealth group
+    color = "black",  # Box color
+    outlier.shape = 16,  # Style outliers
+    outlier.size = 3,  # Outlier size
+    outlier.colour = "red"  # Outlier color
+  ) +
+  theme_minimal() +  # Minimal theme with larger text size
+  labs(
+    title = "Distribution of Time Difference by Wealth Group",
+    x = "Wealth Group", 
+    y = "Time Difference (ms)"
+  ) +
+  theme(
+    plot.title = element_text(size = 14, face = "bold", hjust = 0.5),  # Title styling
+    panel.grid.minor = element_blank(),  # Remove minor gridlines
+    legend.position = "none"  # Hide legend (since it's redundant with the x-axis labels)
+  ) 
+```
