@@ -180,7 +180,7 @@ df_long_age %>%
 ```{r}
 df_clean %>% 
   ggplot(aes(x = Age, y = Time_diff)) +
-  geom_point() +
+  geom_point(color = "darkblue") +
   theme_minimal() +
   labs(title = "Time Difference vs. Age",
        x = "Age (years)", y = "Time Difference (ms)") +
@@ -264,7 +264,7 @@ df_bootstrap_sim %>%
 
 ```
 
-### **observations**
+### **Observations**
 
 We calculated confidence intervals for the mean time difference using both bootstrap resampling and a CLT-based approach.
 

@@ -14,7 +14,7 @@ Ariel Chen and Allyson Hur
   - [**Observations**](#observations)
   - [**Observations**](#observations-1)
   - [**Observations**](#observations-2)
-  - [**observations**](#observations-3)
+  - [**Observations**](#observations-3)
   - [**Results & Conclusions**](#results--conclusions)
 
 # The Role of Wealth in Shaping the Effectiveness of Monetary Incentives on Cognitive Performance
@@ -196,7 +196,7 @@ df_no_outliers %>%
   )
 ```
 
-![](final_project_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
+![](final_final_project_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
 
 ### **Observations**
 
@@ -257,7 +257,7 @@ df_long %>%
   )
 ```
 
-![](final_project_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
+![](final_final_project_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
 
 ``` r
 df_long %>% 
@@ -281,7 +281,7 @@ df_long %>%
   ) 
 ```
 
-![](final_project_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
+![](final_final_project_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
 
 ### **Observations**
 
@@ -331,12 +331,12 @@ df_long_age %>%
   )
 ```
 
-![](final_project_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
+![](final_final_project_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
 
 ``` r
 df_clean %>% 
   ggplot(aes(x = Age, y = Time_diff)) +
-  geom_point() +
+  geom_point(color = "darkblue") +
   theme_minimal() +
   labs(title = "Time Difference vs. Age",
        x = "Age (years)", y = "Time Difference (ms)") +
@@ -348,7 +348,7 @@ df_clean %>%
   )
 ```
 
-![](final_project_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
+![](final_final_project_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
 
 ### **Observations**
 
@@ -387,7 +387,7 @@ df_bootstrap_sim %>%
 
     ## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
 
-![](final_project_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
+![](final_final_project_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
 
 ``` r
 df_bootstrap <- df_bootstrap_sim %>% 
@@ -403,7 +403,7 @@ df_bootstrap
     ## # A tibble: 1 × 3
     ##   mean_time time_lo time_up
     ##       <dbl>   <dbl>   <dbl>
-    ## 1      1.04   -2.64    0.94
+    ## 1      1.07   -2.56   0.970
 
 ``` r
 df_clt_ci <- df_clean %>%
@@ -445,9 +445,9 @@ df_bootstrap_sim %>%
     ## Call `lifecycle::last_lifecycle_warnings()` to see where this warning was
     ## generated.
 
-![](final_project_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
+![](final_final_project_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
 
-### **observations**
+### **Observations**
 
 We calculated confidence intervals for the mean time difference using
 both bootstrap resampling and a CLT-based approach.
